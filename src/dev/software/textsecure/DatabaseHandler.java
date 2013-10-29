@@ -54,11 +54,31 @@ public class DatabaseHandler {
 	}
 	
 	public void signUp(String seed, String imei, String phone){
+		ResultSet resulset = null;
+		int id = 0;
 		try {
 			mPreparedStatement = (PreparedStatement) mConnect
-			          .prepareStatement("DELETE Seed  WHERE seed = ?");
+			          .prepareStatement("SELECT user_id FROM Seed WHERE seed = ?;");
+			mPreparedStatement.setString(1, seed);
+			resulset = mPreparedStatement.executeQuery();
+			if(resulset.first()){
+				id = resulset.getInt("user_id");
+			}else{
+				return;
+			}
+			mPreparedStatement.close();
+			mPreparedStatement = (PreparedStatement) mConnect
+			          .prepareStatement("INSERT INTO Device(imei, phone, user_id) VALUES (?, ?, ?)");
+			mPreparedStatement.setString(1, imei);
+			mPreparedStatement.setString(2, phone);
+			mPreparedStatement.setInt(3, id);
+			mPreparedStatement.executeUpdate();
+			mPreparedStatement.close();
+			mPreparedStatement = (PreparedStatement) mConnect
+			          .prepareStatement("DELETE FROM Seed WHERE seed = ?");
 			mPreparedStatement.setString(1, seed);
 			mPreparedStatement.executeUpdate();
+			mPreparedStatement.close();
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
