@@ -7,6 +7,7 @@ public class PacketHandler extends Handler {
 
 	@Override
 	public void handleMessage(Packet request) {
+		System.out.println(request.getTag());
 		switch (request.getTag()) {
 			case Tag.VERIFY_SEED:
 				verifySeed(request.getData());
