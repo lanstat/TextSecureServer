@@ -2,6 +2,7 @@ package dev.software.textsecure;
 
 import java.sql.DriverManager;
 import java.sql.ResultSet;
+import java.util.ArrayList;
 
 import com.mysql.jdbc.Connection;
 import com.mysql.jdbc.PreparedStatement;
@@ -80,6 +81,65 @@ public class DatabaseHandler {
 			mPreparedStatement.executeUpdate();
 			mPreparedStatement.close();
 		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+	}
+	
+	public ArrayList<String[]> retrieveMessage(String phone){
+		ResultSet resulset = null;
+		ArrayList<String[]> messages = null;
+		int id = 0;
+		try {
+			messages = new ArrayList<>();
+			mPreparedStatement = (PreparedStatement) mConnect
+			          .prepareStatement("SELECT user_id FROM Device WHERE phone = ?;");
+			mPreparedStatement.setString(1, phone);
+			resulset = mPreparedStatement.executeQuery();
+			if(resulset.first()){
+				id = resulset.getInt("user_id");
+			}
+			mPreparedStatement.close();
+			resulset.close();
+			mPreparedStatement = (PreparedStatement) mConnect
+			          .prepareStatement("SELECT phone, content, image FROM Message WHERE user_id = ?");
+			mPreparedStatement.setInt(1, id);
+			resulset = mPreparedStatement.executeQuery();
+			if(resulset.first()){
+				String[] message = new String[3];
+				message[0] = resulset.getString("phone");
+				message[1] = resulset.getString("content");
+				message[2] = resulset.getString("image");
+				messages.add(message);
+				while (resulset.next()) {
+					message = new String[3];
+					message[0] = resulset.getString("phone");
+					message[1] = resulset.getString("content");
+					message[2] = resulset.getString("image");
+					messages.add(message);
+				}
+			}
+			mPreparedStatement.close();
+			resulset.close();
+			mPreparedStatement = (PreparedStatement) mConnect
+			          .prepareStatement("DELETE FROM Message WHERE user_id = ?");
+			mPreparedStatement.setInt(1, id);
+			mPreparedStatement.executeUpdate();
+			mPreparedStatement.close();
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+		return messages;
+	}
+	
+	public void saveMessage(String phone, String content, byte[] image){
+		try{
+			mPreparedStatement = (PreparedStatement) mConnect
+			          .prepareStatement("INSERT INTO Message(phone, content) vALUES (?, ?)");
+			mPreparedStatement.setString(1, phone);
+			mPreparedStatement.setString(2, content);
+			mPreparedStatement.executeUpdate();
+			mPreparedStatement.close();
+		}catch(Exception e){
 			System.out.println(e.getMessage());
 		}
 	}

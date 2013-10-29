@@ -1,6 +1,10 @@
 package dev.software.textsecure;
 
+import java.util.ArrayList;
+
 import dev.sugarscope.server.Handler;
+import dev.sugarscope.server.Peer;
+import dev.sugarscope.server.ServerTCP;
 import dev.sugarscope.transport.Packet;
 
 public class PacketHandler extends Handler {
@@ -15,8 +19,11 @@ public class PacketHandler extends Handler {
 			case Tag.SIGN_UP:
 				signUp(request.getData());
 			break;
-			case Tag.OBTAIN_SAVED_MESSAGE:
-				obtainSavedMessage(request.getData());
+			case Tag.LOGIN:
+				retreivedMessage(request.getData());
+			break;
+			case Tag.SEND_MESSAGE:
+				sendMessage(request.getData());
 			break;
 		}
 	}
@@ -37,16 +44,28 @@ public class PacketHandler extends Handler {
 		response(packet);
 	}
 	
-	private void obtainSavedMessage(Object[] data){
-		
+	private void retreivedMessage(Object[] data){
+		final String phone = data[0].toString();
+		ArrayList<String[]> messages = DatabaseHandler.getInstance().retrieveMessage(phone);
+		Packet packet = new Packet(Tag.OBTAIN_SAVED_MESSAGE);
+		packet.setData(messages.toArray());
+		response(packet);
 	}
 	
-	/**
-	 * 
-	 * @param data
-	 */
 	private void sendMessage(Object[] data){
-		
+		final String[] remitters = (String[]) data[0];
+		final String content = (String) data[1];
+		//final String image = (String) data[2];
+		for(String remitter : remitters){
+			final Peer peer = ServerTCP.getPeer(remitter);
+			if(peer == null){
+				DatabaseHandler.getInstance().saveMessage(remitter, content, null);
+			}else{
+				Packet packet = new Packet(Tag.SEND_MESSAGE);
+				packet.setData(remitter, content);
+				peer.sendPackage(packet);
+			}
+		}
 	}
 
 }
