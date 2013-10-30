@@ -8,7 +8,7 @@ public class TextSecureServer {
 	public static void main(String[] arg){
 		try {
 			DatabaseHandler.getInstance().init();
-			ServerTCP server = new ServerTCP(6543);
+			ServerTCP server = new ServerTCP(6000);
 			server.registerHandler(PacketHandler.class);
 			server.start();
 		} catch (Exception e) {

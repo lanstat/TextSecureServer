@@ -6,13 +6,13 @@ import java.util.ArrayList;
 
 import com.mysql.jdbc.Connection;
 import com.mysql.jdbc.PreparedStatement;
-import com.mysql.jdbc.Statement;
+//import com.mysql.jdbc.Statement;
 
 public class DatabaseHandler {
 	
 	private static DatabaseHandler instance;
 	private Connection mConnect;
-	private Statement mStatement;
+	//private Statement mStatement;
 	private PreparedStatement mPreparedStatement = null;
 	
 	private DatabaseHandler(){}
@@ -29,7 +29,7 @@ public class DatabaseHandler {
 	      Class.forName("com.mysql.jdbc.Driver");
 	      mConnect = (Connection) DriverManager.getConnection("jdbc:mysql://localhost/textsecure?"
 	    		  + "user=root&password=feanylat17");
-	      mStatement = (Statement) mConnect.createStatement();
+	      //mStatement = (Statement) mConnect.createStatement();
 	    } catch (Exception e) {
 	      	System.out.println(e.getMessage());
 	      	response = false;
@@ -101,7 +101,7 @@ public class DatabaseHandler {
 			mPreparedStatement.close();
 			resulset.close();
 			mPreparedStatement = (PreparedStatement) mConnect
-			          .prepareStatement("SELECT phone, content, image FROM Message WHERE user_id = ?");
+			          .prepareStatement("SELECT remitter, content, image FROM Message WHERE user_id = ?");
 			mPreparedStatement.setInt(1, id);
 			resulset = mPreparedStatement.executeQuery();
 			if(resulset.first()){
@@ -141,16 +141,19 @@ public class DatabaseHandler {
 			resulset = mPreparedStatement.executeQuery();
 			if(resulset.first()){
 				id = resulset.getInt("user_id");
+				mPreparedStatement = (PreparedStatement) mConnect
+				          .prepareStatement("INSERT INTO Message(remitter, content, user_id) vALUES (?, ?, ?)");
+				mPreparedStatement.setString(1, sender);
+				mPreparedStatement.setString(2, content);
+				mPreparedStatement.setInt(3, id);
+				mPreparedStatement.executeUpdate();
+				mPreparedStatement.close();
 			}
-			mPreparedStatement = (PreparedStatement) mConnect
-			          .prepareStatement("INSERT INTO Message(phone, content, user_id) vALUES (?, ?, ?)");
-			mPreparedStatement.setString(1, sender);
-			mPreparedStatement.setString(2, content);
-			mPreparedStatement.setInt(3, id);
-			mPreparedStatement.executeUpdate();
-			mPreparedStatement.close();
 		}catch(Exception e){
 			System.out.println(e.getMessage());
+		}finally{
+			resulset = null;
 		}
 	}
 }
+

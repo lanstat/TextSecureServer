@@ -1,7 +1,6 @@
 package dev.software.textsecure;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 import dev.sugarscope.server.Handler;
 import dev.sugarscope.server.Peer;
@@ -13,7 +12,6 @@ public class PacketHandler extends Handler {
 
 	@Override
 	public void handleMessage(Packet request) {
-		System.out.println(request.getTag());
 		switch (request.getTag()) {
 			case Tag.VERIFY_SEED:
 				verifySeed(request.getData());
@@ -29,6 +27,7 @@ public class PacketHandler extends Handler {
 				sendMessage(request.getData());
 			break;
 		}
+		System.out.println(mPeer.getUniqCode()+": "+request.getTag());
 	}
 	
 	private void verifySeed(Object[] data){
@@ -63,14 +62,14 @@ public class PacketHandler extends Handler {
 	private void sendMessage(Object[] data){
 		final String[] remitters = (String[]) data[0];
 		final String content = (String) data[1];
-		//final String image = (String) data[2];
+		final byte[] image = (byte[]) data[2];
 		for(String remitter : remitters){
 			final Peer peer = ServerTCP.getPeer(remitter);
 			if(peer == null){
 				DatabaseHandler.getInstance().saveMessage(mPeer.getUniqCode(), remitter, content, null);
 			}else{
 				Packet packet = new Packet(Tag.SEND_MESSAGE);
-				packet.setData(remitter, content);
+				packet.setData(mPeer.getUniqCode(), content, image);
 				peer.sendPackage(packet);
 			}
 		}
