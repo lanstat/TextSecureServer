@@ -131,12 +131,22 @@ public class DatabaseHandler {
 		return messages;
 	}
 	
-	public void saveMessage(String phone, String content, byte[] image){
+	public void saveMessage(String sender, String remitter, String content, byte[] image){
+		ResultSet resulset = null;
+		int id = 0;
 		try{
 			mPreparedStatement = (PreparedStatement) mConnect
-			          .prepareStatement("INSERT INTO Message(phone, content) vALUES (?, ?)");
-			mPreparedStatement.setString(1, phone);
+			          .prepareStatement("SELECT user_id FROM Device WHERE phone = ?;");
+			mPreparedStatement.setString(1, remitter);
+			resulset = mPreparedStatement.executeQuery();
+			if(resulset.first()){
+				id = resulset.getInt("user_id");
+			}
+			mPreparedStatement = (PreparedStatement) mConnect
+			          .prepareStatement("INSERT INTO Message(phone, content, user_id) vALUES (?, ?, ?)");
+			mPreparedStatement.setString(1, sender);
 			mPreparedStatement.setString(2, content);
+			mPreparedStatement.setInt(3, id);
 			mPreparedStatement.executeUpdate();
 			mPreparedStatement.close();
 		}catch(Exception e){

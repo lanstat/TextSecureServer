@@ -1,6 +1,7 @@
 package dev.software.textsecure;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import dev.sugarscope.server.Handler;
 import dev.sugarscope.server.Peer;
@@ -8,6 +9,7 @@ import dev.sugarscope.server.ServerTCP;
 import dev.sugarscope.transport.Packet;
 
 public class PacketHandler extends Handler {
+	
 
 	@Override
 	public void handleMessage(Packet request) {
@@ -20,6 +22,7 @@ public class PacketHandler extends Handler {
 				signUp(request.getData());
 			break;
 			case Tag.LOGIN:
+				logIn(request.getData());
 				retreivedMessage(request.getData());
 			break;
 			case Tag.SEND_MESSAGE:
@@ -44,6 +47,11 @@ public class PacketHandler extends Handler {
 		response(packet);
 	}
 	
+	private void logIn(Object[] data){
+		final String phone = data[0].toString();
+		mPeer.setUniqCode(phone);
+	}
+	
 	private void retreivedMessage(Object[] data){
 		final String phone = data[0].toString();
 		ArrayList<String[]> messages = DatabaseHandler.getInstance().retrieveMessage(phone);
@@ -59,7 +67,7 @@ public class PacketHandler extends Handler {
 		for(String remitter : remitters){
 			final Peer peer = ServerTCP.getPeer(remitter);
 			if(peer == null){
-				DatabaseHandler.getInstance().saveMessage(remitter, content, null);
+				DatabaseHandler.getInstance().saveMessage(mPeer.getUniqCode(), remitter, content, null);
 			}else{
 				Packet packet = new Packet(Tag.SEND_MESSAGE);
 				packet.setData(remitter, content);
